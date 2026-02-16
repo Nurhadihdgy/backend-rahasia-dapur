@@ -22,7 +22,7 @@ class DashboardService {
       this.dashboardRepository.aggregateRecipesByCategory(),
       this.dashboardRepository.aggregateUserGrowth(),
       this.dashboardRepository.aggregateRecipeGrowth(),
-      this.activityRepository.getRecent(10),
+      this.activityRepository.getRecent(),
     ]);
 
     // Format Chart Data
