@@ -7,6 +7,7 @@ const { verifyToken } = require("../middlewares/authMiddlewares");
 
 router.post("/register", authLimiter, authController.register);
 router.post("/login", authLimiter, authController.login);
+router.post('/admin/login',authLimiter, authController.loginAdmin);
 router.get("/profile", apiLimiter, verifyToken, authController.getProfile);
 router.put("/profile", apiLimiter, verifyToken, authController.updateProfile);
 router.post("/refresh-token", apiLimiter, authLimiter, authController.refreshToken);

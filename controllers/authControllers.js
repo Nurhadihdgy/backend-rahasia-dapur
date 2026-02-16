@@ -36,9 +36,20 @@ class AuthController {
         device: req.headers["user-agent"],
       });
 
+    if (userResponse.role !== "user") {
+      // (Opsional) Hapus session/refresh token yang baru saja dibuat oleh service jika perlu
+      if (refreshToken) await this.authService.logout(refreshToken);
+      
+      return ApiResponse.error(
+        res, 
+        "Login Gagal, User tidak ditemukan.", 
+        403
+      );
+    }
+
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "development",
+      secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       maxAge: 1 * 24 * 60 * 60 * 1000, // 1 hari
     });
@@ -47,6 +58,46 @@ class AuthController {
       res,
       { accessToken, userResponse },
       "Login successful",
+      200,
+    );
+  });
+
+  loginAdmin = asyncHandler(async (req, res) => {
+    // 1. Validasi input (menggunakan schema login yang sama)
+    const validated = await AuthDTO.validate(AuthDTO.loginSchema(), req.body);
+
+    // 2. Panggil authService login
+    const { accessToken, refreshToken, userResponse } = await this.authService.login({
+      ...validated,
+      device: req.headers["user-agent"],
+    });
+
+    // 3. PROTEKSI BACKEND: Cek role user hasil login
+    // Jika role bukan admin, batalkan akses dan kirim error 403 (Forbidden)
+    if (userResponse.role !== "admin") {
+      // (Opsional) Hapus session/refresh token yang baru saja dibuat oleh service jika perlu
+      if (refreshToken) await this.authService.logout(refreshToken);
+      
+      return ApiResponse.error(
+        res, 
+        "Access denied. Only admin can login here.", 
+        403
+      );
+    }
+
+    // 4. Jika valid admin, set cookie refreshToken
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 1 * 24 * 60 * 60 * 1000, // 1 hari
+    });
+
+    // 5. Berikan respon sukses
+    return ApiResponse.success(
+      res,
+      { accessToken, userResponse },
+      "Admin login successful",
       200,
     );
   });
