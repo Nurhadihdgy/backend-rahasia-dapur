@@ -31,7 +31,7 @@ class UserRepository {
   }
 
   async findById(id) {
-    return this.User.findById(id).select("-password -refreshTokens");
+    return this.User.findById(id).select("-password");
   }
 
   async findByIdRaw(id) {
